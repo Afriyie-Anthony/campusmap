@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Map</title>
+    <link rel="stylesheet" href="./src/output.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 
+      To use Google Maps, you need to:
+      1. Go to https://console.cloud.google.com/
+      2. Create a project or select existing one
+      3. Enable Maps JavaScript API and Places API
+      4. Create credentials (API key)
+      5. Replace YOUR_API_KEY below with your actual API key
+    -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&libraries=places"></script>
+    <style>
+      .map-container {
+        width: 100%;
+        height: calc(100vh - 64px);
+        position: relative;
+      }
+      .search-container {
+        position: absolute;
+        top: 32px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+      }
+      .filter-container {
+        position: absolute;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        display: flex;
+        gap: 12px;
+      }
+      .filter-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 24px;
+        background: white;
+        border-radius: 9999px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        font-size: 14px;
+        transition: all 0.2s;
+      }
+      .filter-button:hover {
+        background: #f3f4f6;
+      }
+      .filter-button.active {
+        background: #6b001f;
+        color: white;
+      }
+      .mobile-menu {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+      }
+
+      .mobile-menu.active {
+        transform: translateX(0);
+      }
+
+      .menu-overlay {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease-in-out;
+      }
+
+      .menu-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      #notification-dropdown::before {
+        content: "";
+        position: absolute;
+        top: -8px;
+        right: 16px;
+        width: 16px;
+        height: 16px;
+        background: white;
+        transform: rotate(45deg);
+        border-left: 1px solid #e5e7eb;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      #notification-dropdown {
+        border: 1px solid #e5e7eb;
+      }
+
+      #profile-dropdown::before {
+        content: "";
+        position: absolute;
+        top: -8px;
+        right: 16px;
+        width: 16px;
+        height: 16px;
+        background: white;
+        transform: rotate(45deg);
+        border-left: 1px solid #e5e7eb;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      #profile-dropdown {
+        border: 1px solid #e5e7eb;
+      }
+    </style>
+  </head>
+  <body class="h-screen bg-gray-50">
+    <!-- Navigation Bar -->
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-16">
+        <div class="flex justify-between items-center h-16">
+          <!-- Logo -->
+          <div class="flex-shrink-0">
+            <img
+              src="./public/icons/logo1.png"
+              alt="logo"
+              class="h-12 w-auto"
+            />
+          </div>
+
+          <!-- Desktop Menu -->
+          <div class="hidden md:flex">
+            <ul class="flex items-center gap-8 text-lg font-light">
+              <li>
+                <a href="#" class="text-[#6B001F] hover:text-[#590019]">Home</a>
+              </li>
+              <li>
+                <a href="#" class="text-gray-600 hover:text-[#6B001F]"
+                  >Saved Locations</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-600 hover:text-[#6B001F]"
+                  >Events</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-600 hover:text-[#6B001F]"
+                  >Community</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <!-- Notification and Profile -->
+          <div class="flex items-center gap-4 sm:gap-6">
+            <div class="relative">
+              <button
+                class="p-2 hover:bg-gray-100 rounded-full relative group"
+                id="notification-btn"
+              >
+                <img
+                  src="./public/images/notificatiuon.png"
+                  alt="notification"
+                  class="w-6 h-6 sm:w-7 sm:h-7"
+                />
+                <span
+                  class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"
+                ></span>
+              </button>
+            </div>
+            <div class="relative">
+              <button
+                class="p-1 hover:bg-gray-100 rounded-full relative group"
+                id="profile-btn"
+              >
+                <img
+                  src="./public/images/profile.png"
+                  alt="profile"
+                  class="w-8 h-8 sm:w-9 sm:h-9 rounded-full"
+                />
+              </button>
+
+              <!-- Profile Dropdown -->
+              <div
+                id="profile-dropdown"
+                class="hidden absolute right-0 top-[60px] w-[280px] bg-white rounded-xl shadow-lg z-[100]"
+              >
+                <!-- Profile Menu Items -->
+                <div class="p-2">
+                  <a
+                    href="./profile.html"
+                    class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    View Profile
+                  </a>
+                  <a
+                    href="./profile.html"
+                    class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    Email Settings
+                  </a>
+                  <div class="h-[1px] bg-gray-200 my-2"></div>
+                  <a
+                    href="#"
+                    class="block px-4 py-3 text-red-600 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    Logout
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile Menu Button -->
+          <div class="md:hidden">
+            <button
+              id="menu-toggle"
+              class="p-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+            >
+              <svg
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  id="menu-icon"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                ></path>
+                <path
+                  id="close-icon"
+                  class="hidden"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Menu Overlay -->
+      <div
+        id="menu-overlay"
+        class="menu-overlay fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+      ></div>
+
+      <!-- Mobile Menu -->
+      <div
+        id="mobile-menu"
+        class="mobile-menu fixed left-0 top-0 bottom-0 w-64 bg-white shadow-lg z-50 md:hidden"
+      >
+        <div class="flex flex-col h-full">
+          <!-- Mobile Menu Header -->
+          <div class="p-4 border-b">
+            <img
+              src="./public/icons/logo1.png"
+              alt="logo"
+              class="h-10 w-auto"
+            />
+          </div>
+
+          <!-- Mobile Menu Links -->
+          <div class="flex-1 overflow-y-auto py-4">
+            <a
+              href="#"
+              class="block px-4 py-3 text-[#6B001F] font-medium hover:bg-gray-50"
+              >Home</a
+            >
+            <a
+              href="#"
+              class="block px-4 py-3 text-gray-600 hover:text-[#6B001F] hover:bg-gray-50"
+              >Saved Locations</a
+            >
+            <a
+              href="#"
+              class="block px-4 py-3 text-gray-600 hover:text-[#6B001F] hover:bg-gray-50"
+              >Events</a
+            >
+            <a
+              href="#"
+              class="block px-4 py-3 text-gray-600 hover:text-[#6B001F] hover:bg-gray-50"
+              >Community</a
+            >
+          </div>
+
+          <!-- Mobile Menu Footer -->
+          <div class="border-t p-4">
+            <div class="flex items-center gap-3">
+              <img
+                src="./public/images/profile.png"
+                alt="profile"
+                class="w-10 h-10 rounded-full"
+              />
+              <div>
+                <div class="font-medium text-gray-900">User Profile</div>
+                <div class="text-sm text-gray-500">View Profile</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Notification Dropdown -->
+    <div
+      id="notification-dropdown"
+      class="hidden absolute right-56 top-[60px] w-[380px] bg-white rounded-xl shadow-lg z-[100]"
+    >
+      <!-- Tabs -->
+      <div class="flex border-b">
+        <button
+          id="activity-tab"
+          class="flex-1 px-4 py-3 text-lg font-medium text-[#6B001F] border-b-2 border-[#6B001F]"
+        >
+          Activity
+        </button>
+        <button
+          id="highlights-tab"
+          class="flex-1 px-4 py-3 text-lg font-medium text-gray-500"
+        >
+          Highlights
+        </button>
+      </div>
+
+      <!-- Activity Content -->
+      <div id="activity-content" class="max-h-[300px] overflow-y-auto">
+        <!-- Current Location -->
+        <div class="p-5 bg-gray-50">
+          <p class="text-base text-gray-600">
+            You are currently at the Autonomy Hall
+          </p>
+          <p class="text-sm text-gray-500 mt-1">5 mins ago</p>
+        </div>
+
+        <!-- Next Lecture -->
+        <div class="p-5 border-t">
+          <p class="text-base text-gray-600">
+            You have to be at the Lecture Hall for your 10 am lecture
+          </p>
+          <p class="text-sm text-gray-500 mt-1">in 15 mins</p>
+        </div>
+      </div>
+
+      <!-- Highlights Content -->
+      <div id="highlights-content" class="hidden max-h-[300px] overflow-y-auto">
+        <!-- Highlight Items -->
+        <div class="p-5 hover:bg-gray-50">
+          <div class="flex items-start gap-3">
+            <div
+              class="w-10 h-10 rounded-full bg-[#6B001F] bg-opacity-10 flex items-center justify-center"
+            >
+              <svg
+                class="w-5 h-5 text-[#6B001F]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-base text-gray-600">
+                Hall Week Celebration starts tomorrow!
+              </p>
+              <p class="text-sm text-gray-500 mt-1">12th October 2023</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="relative h-[calc(100vh-4rem)] mt-16 lg:mt-26">
+      <!-- Map Container -->
+      <div id="map" class="w-full h-full"></div>
+
+      <!-- Search and Filters Container -->
+      <div class="fixed top-20 left-0 right-0 px-4 py-6 z-10">
+        <!-- Search Bar -->
+        <div class="max-w-2xl mx-auto">
+          <div
+            class="bg-white rounded-full shadow-xl flex items-center px-4 h-12 sm:h-[50px]"
+          >
+            <img
+              src="./public/icons/search.png"
+              alt="search"
+              class="w-5 h-5 sm:w-6 sm:h-6"
+            />
+            <input
+              type="search"
+              placeholder="Search for a location"
+              class="w-full px-4 focus:outline-none text-sm sm:text-base"
+            />
+            <img
+              src="./public/icons/forward.png"
+              alt="filter"
+              class="w-5 h-5 sm:w-6 sm:h-6"
+            />
+          </div>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div
+          class="flex justify-center gap-2 sm:gap-3 mt-4 overflow-x-auto px-4 pb-2 -mx-4"
+        >
+          <button
+            class="flex items-center gap-2 px-4 py-2 bg-[#6B001F] text-white rounded-full shadow-md whitespace-nowrap text-sm sm:text-base"
+            data-filter="hostels"
+          >
+            <img
+              src="./public/icons/hostels.png"
+              alt="hostel"
+              class="w-4 h-4 sm:w-5 sm:h-5"
+            />
+            <span>Hostels</span>
+          </button>
+          <button
+            class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-full shadow-md whitespace-nowrap text-sm sm:text-base"
+            data-filter="faculties"
+          >
+            <img
+              src="./public/icons/faculties.png"
+              alt="faculty"
+              class="w-4 h-4 sm:w-5 sm:h-5"
+            />
+            <span>Faculties</span>
+          </button>
+          <button
+            class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-full shadow-md whitespace-nowrap text-sm sm:text-base"
+            data-filter="eateries"
+          >
+            <img
+              src="./public/icons/eatries.png"
+              alt="food"
+              class="w-4 h-4 sm:w-5 sm:h-5"
+            />
+            <span>Eateries</span>
+          </button>
+          <button
+            class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-full shadow-md whitespace-nowrap text-sm sm:text-base"
+            data-filter="atm"
+          >
+            <img
+              src="./public/icons/atm.png"
+              alt="atm"
+              class="w-4 h-4 sm:w-5 sm:h-5"
+            />
+            <span>ATM</span>
+          </button>
+          <button
+            class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-full shadow-md whitespace-nowrap text-sm sm:text-base"
+            data-filter="more"
+          >
+            More Filters +
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Saved Locations Popup -->
+    <div
+      id="saved-locations-popup"
+      class="hidden fixed inset-0 z-50 overflow-y-auto"
+    >
+      <!-- Overlay -->
+      <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+
+      <!-- Popup Content -->
+      <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div
+          class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-auto my-8"
+        >
+          <!-- Header -->
+          <div class="flex justify-between items-center p-6 border-b">
+            <h2 class="text-2xl font-semibold">My Saved Locations</h2>
+            <div class="flex items-center gap-2">
+              <button
+                id="edit-list-btn"
+                class="text-gray-600 hover:text-gray-800"
+              >
+                Edit List
+              </button>
+              <button
+                id="add-location-btn"
+                class="bg-[#6B001F] text-white px-4 py-2 rounded-full text-sm hover:bg-[#590019]"
+              >
+                Add Location
+              </button>
+            </div>
+          </div>
+
+          <!-- Location List -->
+          <div class="p-6 max-h-[calc(100vh-16rem)] overflow-y-auto">
+            <!-- Location Item -->
+            <div
+              class="bg-white rounded-xl shadow mb-4 hover:shadow-md transition-shadow"
+            >
+              <div class="flex items-start gap-4 p-4">
+                <img
+                  src="./public/icons/autonomy.png"
+                  alt="Autonomy Hall"
+                  class="w-24 h-24 object-cover rounded-lg"
+                />
+                <div class="flex-1">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="text-lg font-medium">Autonomy Hall</h3>
+                      <p class="text-sm text-gray-600">
+                        Lecture Hall • West Wing
+                      </p>
+                    </div>
+                    <div class="flex items-center">
+                      <div class="flex">
+                        <svg
+                          class="w-4 h-4 text-yellow-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                          />
+                        </svg>
+                        <span class="ml-1 text-sm font-medium">4.0</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-sm text-gray-500 mt-2">
+                    Opens from 7am - 10pm
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Location Item -->
+            <div
+              class="bg-white rounded-xl shadow mb-4 hover:shadow-md transition-shadow"
+            >
+              <div class="flex items-start gap-4 p-4">
+                <img
+                  src="./public/icons/library.png"
+                  alt="AAMUSTED Main Library"
+                  class="w-24 h-24 object-cover rounded-lg"
+                />
+                <div class="flex-1">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="text-lg font-medium">AAMUSTED Main Library</h3>
+                      <p class="text-sm text-gray-600">Library • West Wing</p>
+                    </div>
+                    <div class="flex items-center">
+                      <div class="flex">
+                        <svg
+                          class="w-4 h-4 text-yellow-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                          />
+                        </svg>
+                        <span class="ml-1 text-sm font-medium">4.0</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-sm text-gray-500 mt-2">
+                    Opens from 7am - 10pm
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Location Modal -->
+    <div id="add-location-modal" class="hidden fixed inset-0 z-[60]">
+      <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+      <div
+        class="fixed top-[10%] left-1/2 transform -translate-x-1/2 bg-white rounded-2xl shadow-2xl w-[90%] max-w-lg"
+      >
+        <div class="p-4 border-b">
+          <h3 class="text-xl font-medium">Add New Location</h3>
+        </div>
+        <form id="add-location-form" class="p-4">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Location Name</label
+              >
+              <input
+                type="text"
+                id="location-name"
+                required
+                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6B001F]"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Category</label
+              >
+              <select
+                id="location-category"
+                required
+                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6B001F]"
+              >
+                <option value="">Select a category</option>
+                <option value="Lecture Hall">Lecture Hall</option>
+                <option value="Library">Library</option>
+                <option value="Hostel">Hostel</option>
+                <option value="Restaurant">Restaurant</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Wing/Area</label
+              >
+              <select
+                id="location-wing"
+                required
+                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6B001F]"
+              >
+                <option value="">Select wing/area</option>
+                <option value="West Wing">West Wing</option>
+                <option value="East Wing">East Wing</option>
+                <option value="North Wing">North Wing</option>
+                <option value="South Wing">South Wing</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Opening Hours</label
+              >
+              <div class="flex gap-2">
+                <input
+                  type="time"
+                  id="opening-time"
+                  required
+                  class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6B001F]"
+                />
+                <span class="flex items-center">to</span>
+                <input
+                  type="time"
+                  id="closing-time"
+                  required
+                  class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6B001F]"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              id="cancel-add"
+              class="px-4 py-2 text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-[#6B001F] text-white rounded-full hover:bg-[#590019]"
+            >
+              Add Location
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Mode Template -->
+    <template id="edit-mode-template">
+      <div class="absolute right-3 top-3 flex items-center gap-2">
+        <button class="edit-location p-2 hover:bg-gray-100 rounded-full">
+          <svg
+            class="w-5 h-5 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+            />
+          </svg>
+        </button>
+        <button class="delete-location p-2 hover:bg-gray-100 rounded-full">
+          <svg
+            class="w-5 h-5 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
+          </svg>
+        </button>
+      </div>
+    </template>
+
+    <!-- Upcoming Events Popup -->
+    <div
+      id="upcoming-events-popup"
+      class="hidden fixed inset-0 z-50 overflow-y-auto pt-20"
+    >
+      <!-- Overlay -->
+      <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+
+      <!-- Popup Content -->
+      <div
+        class="relative mx-auto w-[90%] max-w-2xl bg-white rounded-2xl shadow-2xl"
+      >
+        <!-- Header -->
+        <div class="flex justify-between items-center p-4 border-b">
+          <h2 class="text-xl font-medium">Upcoming Events</h2>
+          <div class="flex items-center gap-3">
+            <button class="text-gray-600 hover:text-gray-800 text-sm">
+              More Filters +
+            </button>
+          </div>
+        </div>
+
+        <!-- Events List -->
+        <div class="p-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
+          <!-- Event Item -->
+          <div
+            class="bg-white rounded-lg shadow-sm border mb-3 hover:shadow transition-shadow"
+          >
+            <div class="flex items-start gap-3 p-3">
+              <img
+                src="./public/images/events.png"
+                alt="Hall Week Celebration"
+                class="w-60 h-60 object-cover rounded-lg"
+              />
+              <div class="flex-1">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-base font-medium">Hall Week Celebration</h3>
+                    <p class="text-md text-gray-500">
+                      Technical Education Hall Week
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">12th October 2023</p>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <h4 class="text-sm font-medium mb-1">Program Lineup:</h4>
+                  <ul class="text-sm text-gray-500 space-y-0.5">
+                    <li>• Introduction to Hall Week</li>
+                    <li>• Introduction to Hall Week</li>
+                    <li>• Introduction to Hall Week</li>
+                    <li>• Introduction to Hall Week</li>
+                    <li>• Introduction to Hall Week</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add more event items here -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Mobile menu functionality
+      const menuToggle = document.getElementById("menu-toggle");
+      const mobileMenu = document.getElementById("mobile-menu");
+      const menuOverlay = document.getElementById("menu-overlay");
+      const menuIcon = document.getElementById("menu-icon");
+      const closeIcon = document.getElementById("close-icon");
+
+      function toggleMenu() {
+        mobileMenu.classList.toggle("active");
+        menuOverlay.classList.toggle("active");
+        menuIcon.classList.toggle("hidden");
+        closeIcon.classList.toggle("hidden");
+        document.body.classList.toggle("overflow-hidden");
+      }
+
+      menuToggle.addEventListener("click", toggleMenu);
+      menuOverlay.addEventListener("click", toggleMenu);
+
+      // Close menu on window resize if it's open
+      window.addEventListener("resize", () => {
+        if (
+          window.innerWidth >= 768 &&
+          mobileMenu.classList.contains("active")
+        ) {
+          toggleMenu();
+        }
+      });
+
+      // Initialize Google Maps
+      function initMap() {
+        const aamusted = { lat: 6.6885, lng: -1.6244 };
+
+        const map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 17,
+          center: aamusted,
+          mapId: "YOUR_MAP_ID",
+          disableDefaultUI: true,
+          zoomControl: true,
+          styles: [
+            {
+              featureType: "poi",
+              elementType: "labels",
+              stylers: [{ visibility: "off" }],
+            },
+            {
+              featureType: "transit",
+              elementType: "labels",
+              stylers: [{ visibility: "off" }],
+            },
+          ],
+        });
+
+        // Add markers for different locations
+        const locations = [
+          {
+            position: { lat: 6.6885, lng: -1.6244 },
+            type: "faculty",
+            title: "Faculty of Technical Education",
+            icon: "./public/icons/faculties.png",
+          },
+          {
+            position: { lat: 6.688, lng: -1.624 },
+            type: "hostel",
+            title: "Student Hostel",
+            icon: "./public/icons/hostels.png",
+          },
+          {
+            position: { lat: 6.689, lng: -1.625 },
+            type: "eateries",
+            title: "Campus Restaurant",
+            icon: "./public/icons/eatries.png",
+          },
+          {
+            position: { lat: 6.6875, lng: -1.6235 },
+            type: "atm",
+            title: "Campus ATM",
+            icon: "./public/icons/atm.png",
+          },
+        ];
+
+        // Create markers with custom icons
+        const markers = locations.map((location) => {
+          const marker = new google.maps.Marker({
+            position: location.position,
+            map: map,
+            title: location.title,
+            icon: {
+              url: location.icon,
+              scaledSize: new google.maps.Size(32, 32),
+            },
+            type: location.type,
+          });
+
+          // Add info window
+          const infowindow = new google.maps.InfoWindow({
+            content: `
+              <div class="p-2">
+                <h3 class="font-medium">${location.title}</h3>
+                <p class="text-gray-600">${location.type}</p>
+              </div>
+            `,
+          });
+
+          marker.addListener("click", () => {
+            infowindow.open(map, marker);
+          });
+
+          return marker;
+        });
+
+        // Filter buttons functionality
+        const filterButtons = document.querySelectorAll("button[data-filter]");
+        filterButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            // Update button styles
+            filterButtons.forEach((btn) => {
+              if (btn === button) {
+                btn.classList.remove(
+                  "bg-white",
+                  "text-gray-700",
+                  "hover:bg-gray-50"
+                );
+                btn.classList.add("bg-[#6B001F]", "text-white");
+              } else {
+                btn.classList.remove("bg-[#6B001F]", "text-white");
+                btn.classList.add(
+                  "bg-white",
+                  "text-gray-700",
+                  "hover:bg-gray-50"
+                );
+              }
+            });
+
+            const filterType = button.dataset.filter;
+            markers.forEach((marker) => {
+              marker.setVisible(
+                filterType === "more" || marker.type === filterType
+              );
+            });
+          });
+        });
+
+        // Search functionality
+        const searchInput = document.querySelector('input[type="search"]');
+        const searchBox = new google.maps.places.SearchBox(searchInput);
+
+        map.addListener("bounds_changed", () => {
+          searchBox.setBounds(map.getBounds());
+        });
+
+        searchBox.addListener("places_changed", () => {
+          const places = searchBox.getPlaces();
+          if (places.length === 0) return;
+
+          const bounds = new google.maps.LatLngBounds();
+          places.forEach((place) => {
+            if (!place.geometry) return;
+            bounds.extend(place.geometry.location);
+          });
+          map.fitBounds(bounds);
+        });
+      }
+
+      // Load map when page loads
+      window.addEventListener("load", initMap);
+
+      // Saved Locations Popup Functionality
+      const savedLocationsLink = document.querySelector(
+        'a[href="#"][text*="Saved Locations"]'
+      );
+      const savedLocationsPopup = document.getElementById(
+        "saved-locations-popup"
+      );
+      const editListBtn = document.getElementById("edit-list-btn");
+      const addLocationBtn = document.getElementById("add-location-btn");
+
+      // Show popup when clicking "Saved Locations"
+      document.querySelectorAll("a").forEach((link) => {
+        if (link.textContent.includes("Saved Locations")) {
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
+            savedLocationsPopup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+          });
+        }
+      });
+
+      // Close popup when clicking overlay
+      savedLocationsPopup.addEventListener("click", (e) => {
+        if (e.target === savedLocationsPopup) {
+          savedLocationsPopup.classList.add("hidden");
+          document.body.classList.remove("overflow-hidden");
+        }
+      });
+
+      // Edit List button functionality
+      editListBtn.addEventListener("click", () => {
+        // Implement edit functionality
+        console.log("Edit list clicked");
+      });
+
+      // Add Location button functionality
+      addLocationBtn.addEventListener("click", () => {
+        // Implement add location functionality
+        console.log("Add location clicked");
+      });
+
+      let isEditMode = false;
+      const addLocationModal = document.getElementById("add-location-modal");
+      const addLocationForm = document.getElementById("add-location-form");
+      const editModeTemplate = document.getElementById("edit-mode-template");
+      const locationsList = document.querySelector(".location-list");
+
+      // Toggle Edit Mode
+      editListBtn.addEventListener("click", () => {
+        isEditMode = !isEditMode;
+        editListBtn.textContent = isEditMode ? "Done" : "Edit List";
+
+        const locationItems = document.querySelectorAll(".location-item");
+        locationItems.forEach((item) => {
+          if (isEditMode) {
+            const editControls = editModeTemplate.content.cloneNode(true);
+            item.appendChild(editControls);
+
+            // Add event listeners for edit and delete buttons
+            const editBtn = item.querySelector(".edit-location");
+            const deleteBtn = item.querySelector(".delete-location");
+
+            editBtn.addEventListener("click", () => editLocation(item));
+            deleteBtn.addEventListener("click", () => deleteLocation(item));
+          } else {
+            const controls = item.querySelector(".absolute");
+            if (controls) controls.remove();
+          }
+        });
+      });
+
+      // Show Add Location Modal
+      addLocationBtn.addEventListener("click", () => {
+        addLocationModal.classList.remove("hidden");
+      });
+
+      // Hide Add Location Modal
+      document.getElementById("cancel-add").addEventListener("click", () => {
+        addLocationModal.classList.add("hidden");
+        addLocationForm.reset();
+      });
+
+      // Handle Add Location Form Submit
+      addLocationForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById("location-name").value;
+        const category = document.getElementById("location-category").value;
+        const wing = document.getElementById("location-wing").value;
+        const openTime = document.getElementById("opening-time").value;
+        const closeTime = document.getElementById("closing-time").value;
+
+        // Create new location item
+        const newLocation = document.createElement("div");
+        newLocation.className =
+          "location-item bg-white rounded-lg shadow-sm border mb-3 hover:shadow transition-shadow relative";
+        newLocation.innerHTML = `
+          <div class="flex items-start gap-3 p-3">
+            <img src="./public/icons/default-location.png" alt="${name}" class="w-20 h-20 object-cover rounded-lg"/>
+            <div class="flex-1">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="text-base font-medium">${name}</h3>
+                  <p class="text-sm text-gray-500">${category} • ${wing}</p>
+                </div>
+                <div class="flex items-center">
+                  <div class="flex">
+                    <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                    <span class="ml-1 text-xs font-medium">New</span>
+                  </div>
+                </div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Opens from ${formatTime(
+                openTime
+              )} - ${formatTime(closeTime)}</p>
+            </div>
+          </div>
+        `;
+
+        // Add to locations list
+        locationsList.insertBefore(newLocation, locationsList.firstChild);
+
+        // Reset and close modal
+        addLocationForm.reset();
+        addLocationModal.classList.add("hidden");
+      });
+
+      // Helper function to format time
+      function formatTime(time) {
+        return new Date(`2000-01-01T${time}`)
+          .toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "numeric",
+            hour12: true,
+          })
+          .toLowerCase();
+      }
+
+      // Delete Location
+      function deleteLocation(item) {
+        if (confirm("Are you sure you want to delete this location?")) {
+          item.remove();
+        }
+      }
+
+      // Edit Location
+      function editLocation(item) {
+        const name = item.querySelector("h3").textContent;
+        const [category, wing] = item
+          .querySelector("p")
+          .textContent.split(" • ");
+        const hours = item.querySelector("p:last-child").textContent;
+
+        // Populate form
+        document.getElementById("location-name").value = name;
+        document.getElementById("location-category").value = category;
+        document.getElementById("location-wing").value = wing;
+
+        // Show modal
+        addLocationModal.classList.remove("hidden");
+      }
+
+      // Add class to existing location items
+      document.querySelectorAll(".bg-white.rounded-xl").forEach((item) => {
+        item.classList.add("location-item");
+        item.classList.remove("rounded-xl");
+        item.classList.add("rounded-lg");
+      });
+
+      // Navigation active states
+      const navLinks = document.querySelectorAll("nav a");
+      const popups = {
+        Home: null,
+        "Saved Locations": "saved-locations-popup",
+        Events: "upcoming-events-popup",
+        Community: null,
+      };
+
+      navLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          if (link.textContent.includes("View Profile")) {
+            // Allow the default action
+            return; // Do not prevent default
+          }
+          // Other logic for different links
+          e.preventDefault(); // Only prevent default for other links
+
+          // Remove active state from all links
+          navLinks.forEach((l) => {
+            l.classList.remove("text-[#6B001F]");
+            l.classList.add("text-gray-600");
+          });
+
+          // Add active state to clicked link
+          link.classList.remove("text-gray-600");
+          link.classList.add("text-[#6B001F]");
+
+          // Handle popups
+          const linkText = link.textContent.trim();
+          const popupId = popups[linkText];
+
+          // Hide all popups first
+          Object.values(popups).forEach((id) => {
+            if (id) {
+              document.getElementById(id).classList.add("hidden");
+            }
+          });
+
+          // Show the corresponding popup if it exists
+          if (popupId) {
+            const popup = document.getElementById(popupId);
+            popup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+          } else {
+            document.body.classList.remove("overflow-hidden");
+          }
+        });
+      });
+
+      // Close popups when clicking overlay
+      document
+        .querySelectorAll("#upcoming-events-popup, #saved-locations-popup")
+        .forEach((popup) => {
+          popup.addEventListener("click", (e) => {
+            if (e.target === popup) {
+              popup.classList.add("hidden");
+              document.body.classList.remove("overflow-hidden");
+
+              // Reset nav active states to home
+              navLinks.forEach((link) => {
+                if (link.textContent.trim() === "Home") {
+                  link.classList.remove("text-gray-600");
+                  link.classList.add("text-[#6B001F]");
+                } else {
+                  link.classList.remove("text-[#6B001F]");
+                  link.classList.add("text-gray-600");
+                }
+              });
+            }
+          });
+        });
+
+      // Also handle mobile menu links
+      const mobileNavLinks = document.querySelectorAll("#mobile-menu a");
+      mobileNavLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+
+          // Remove active state from all mobile links
+          mobileNavLinks.forEach((l) => {
+            l.classList.remove("text-[#6B001F]");
+            l.classList.add("text-gray-600");
+          });
+
+          // Add active state to clicked link
+          link.classList.remove("text-gray-600");
+          link.classList.add("text-[#6B001F]");
+
+          // Handle popups same as desktop
+          const linkText = link.textContent.trim();
+          const popupId = popups[linkText];
+
+          // Hide all popups first
+          Object.values(popups).forEach((id) => {
+            if (id) {
+              document.getElementById(id).classList.add("hidden");
+            }
+          });
+
+          // Show the corresponding popup if it exists
+          if (popupId) {
+            const popup = document.getElementById(popupId);
+            popup.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+          } else {
+            document.body.classList.remove("overflow-hidden");
+          }
+
+          // Close mobile menu
+          toggleMenu();
+        });
+      });
+
+      // Notification dropdown functionality
+      document.addEventListener("DOMContentLoaded", function () {
+        const notificationBtn = document.getElementById("notification-btn");
+        const notificationDropdown = document.getElementById(
+          "notification-dropdown"
+        );
+        const activityTab = document.getElementById("activity-tab");
+        const highlightsTab = document.getElementById("highlights-tab");
+        const activityContent = document.getElementById("activity-content");
+        const highlightsContent = document.getElementById("highlights-content");
+
+        // Toggle dropdown
+        notificationBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const isHidden = notificationDropdown.classList.contains("hidden");
+
+          // Close all other dropdowns first
+          document.querySelectorAll(".dropdown-content").forEach((dropdown) => {
+            dropdown.classList.add("hidden");
+          });
+
+          // Toggle this dropdown
+          notificationDropdown.classList.toggle("hidden");
+
+          if (!isHidden) {
+            // If we're closing the dropdown
+            document.body.classList.remove("overflow-hidden");
+          } else {
+            // If we're opening the dropdown
+            document.body.classList.add("overflow-hidden");
+          }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", (e) => {
+          if (
+            !notificationDropdown.contains(e.target) &&
+            !notificationBtn.contains(e.target)
+          ) {
+            notificationDropdown.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+          }
+        });
+
+        // Tab switching
+        activityTab.addEventListener("click", () => {
+          activityTab.classList.add(
+            "text-[#6B001F]",
+            "border-b-2",
+            "border-[#6B001F]"
+          );
+          highlightsTab.classList.remove(
+            "text-[#6B001F]",
+            "border-b-2",
+            "border-[#6B001F]"
+          );
+          highlightsTab.classList.add("text-gray-500");
+
+          activityContent.classList.remove("hidden");
+          highlightsContent.classList.add("hidden");
+        });
+
+        highlightsTab.addEventListener("click", () => {
+          highlightsTab.classList.add(
+            "text-[#6B001F]",
+            "border-b-2",
+            "border-[#6B001F]"
+          );
+          activityTab.classList.remove(
+            "text-[#6B001F]",
+            "border-b-2",
+            "border-[#6B001F]"
+          );
+          activityTab.classList.add("text-gray-500");
+
+          highlightsContent.classList.remove("hidden");
+          activityContent.classList.add("hidden");
+        });
+
+        // Close dropdown when scrolling
+        window.addEventListener("scroll", () => {
+          notificationDropdown.classList.add("hidden");
+          document.body.classList.remove("overflow-hidden");
+        });
+      });
+
+      // Profile dropdown functionality
+      document.addEventListener("DOMContentLoaded", function () {
+        const profileBtn = document.getElementById("profile-btn");
+        const profileDropdown = document.getElementById("profile-dropdown");
+
+        // Toggle dropdown
+        profileBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const isHidden = profileDropdown.classList.contains("hidden");
+
+          // Close notification dropdown if open
+          const notificationDropdown = document.getElementById(
+            "notification-dropdown"
+          );
+          notificationDropdown.classList.add("hidden");
+
+          // Toggle profile dropdown
+          profileDropdown.classList.toggle("hidden");
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", (e) => {
+          if (
+            !profileDropdown.contains(e.target) &&
+            !profileBtn.contains(e.target)
+          ) {
+            profileDropdown.classList.add("hidden");
+          }
+        });
+
+        // Close dropdown when scrolling
+        window.addEventListener("scroll", () => {
+          profileDropdown.classList.add("hidden");
+        });
+
+        // Handle logout click
+        const logoutBtn = profileDropdown.querySelector(
+          'a[class*="text-red-600"]'
+        );
+        logoutBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          // Add your logout logic here
+          console.log("Logging out...");
+        });
+      });
+
+      // View Profile Page Functionality
+      document.addEventListener("DOMContentLoaded", function () {
+        const viewProfileLinks = document.querySelectorAll("a");
+        const viewProfilePage = document.getElementById("view-profile-page");
+        const closeProfileBtn = document.getElementById("close-profile-page");
+
+        // Show profile page when clicking "View Profile"
+        viewProfileLinks.forEach((link) => {
+          if (link.textContent.trim() === "View Profile") {
+            link.addEventListener("click", (e) => {
+              e.preventDefault();
+              viewProfilePage.classList.remove("hidden");
+              document.body.classList.add("overflow-hidden");
+            });
+          }
+        });
+
+        // Close profile page
+        closeProfileBtn.addEventListener("click", () => {
+          viewProfilePage.classList.add("hidden");
+          document.body.classList.remove("overflow-hidden");
+        });
+
+        // Handle form submission
+        const profileForm = viewProfilePage.querySelector("form");
+        if (profileForm) {
+          profileForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            // Add your form submission logic here
+            console.log("Updating profile...");
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

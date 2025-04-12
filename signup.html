@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Map - Sign Up</title>
+    <link rel="stylesheet" href="./src/output.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .input-with-icon {
+        padding-right: 1.25rem;
+      }
+      .icon-container {
+        left: 0;
+        display: flex;
+        align-items: center;
+        height: 100%;
+        padding-right: 4.25rem;
+      }
+      @media (max-width: 768px) {
+        .mobile-circle {
+          width: 150px;
+          height: 150px;
+          opacity: 0.7;
+        }
+      }
+    </style>
+  </head>
+  <body class="h-screen bg-white">
+    <div class="flex flex-col md:flex-row h-full">
+      <!-- Left side - Image section -->
+      <div class="hidden md:flex md:w-1/2 relative overflow-hidden">
+        <div
+          class="absolute inset-0 bg-gradient-to-b from-transparent to-black/40"
+        ></div>
+        <img
+          src="./public/images/loginbg.png"
+          alt="Campus background"
+          class="object-cover w-full h-full"
+        />
+        <div
+          class="absolute inset-0 flex flex-col items-center justify-center text-white z-10 text-center px-4 sm:px-8"
+        >
+          <img
+            src="./public/icons/logo1.png"
+            alt="Logo"
+            class="mb-6 w-16 md:w-24 lg:w-28"
+          />
+          <p class="text-base md:text-lg max-w-md leading-relaxed px-4">
+            Join our campus community and navigate with ease.
+          </p>
+        </div>
+        <!-- Decorative circle -->
+        <div
+          class="absolute -bottom-40 -right-40 w-64 md:w-80 h-64 md:h-80 bg-[#6B001F] rounded-full opacity-90"
+        ></div>
+      </div>
+
+      <!-- Mobile Logo (only shows on mobile) -->
+      <div
+        class="md:hidden flex justify-center items-center pt-8 pb-4 relative"
+      >
+        <img src="./public/icons/logo1.png" alt="Logo" class="w-16 h-auto" />
+      </div>
+
+      <!-- Right side - Signup form -->
+      <div
+        class="w-full md:w-1/2 flex items-center justify-center px-4 sm:px-6 md:px-8 relative overflow-hidden min-h-[80vh] md:min-h-full"
+      >
+        <!-- Decorative circles -->
+        <div
+          class="absolute -top-20 -right-20 mobile-circle w-40 sm:w-56 h-40 sm:h-56 bg-[#6B001F] rounded-full opacity-90"
+        ></div>
+        <div
+          class="absolute -bottom-20 -right-20 mobile-circle w-40 sm:w-56 h-40 sm:h-56 bg-[#6B001F] rounded-full opacity-90"
+        ></div>
+
+        <div class="w-full max-w-md z-10 my-8 md:my-0">
+          <div class="bg-gray-50 p-6 sm:p-8 md:p-10 rounded-2xl shadow-sm">
+            <h1
+              class="text-xl sm:text-2xl font-bold mb-6 sm:mb-8 md:mb-10 text-center"
+            >
+              SIGN UP
+            </h1>
+
+            <form class="space-y-4 sm:space-y-6">
+              <!-- Full Name -->
+              <div>
+                <div class="relative flex items-center">
+                  <span class="icon-container absolute">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-[18px] w-[18px] text-gray-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    class="input-with-icon w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-1 focus:ring-[#6B001F] focus:border-[#6B001F] placeholder-gray-400 text-sm"
+                    placeholder="Full Name"
+                  />
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div>
+                <div class="relative flex items-center">
+                  <span class="icon-container absolute">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-[18px] w-[18px] text-gray-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"
+                      />
+                      <path
+                        d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    type="email"
+                    class="input-with-icon w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-1 focus:ring-[#6B001F] focus:border-[#6B001F] placeholder-gray-400 text-sm"
+                    placeholder="Email Address"
+                  />
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div>
+                <div class="relative flex items-center">
+                  <span class="icon-container absolute">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-[18px] w-[18px] text-gray-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    type="password"
+                    class="input-with-icon w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-1 focus:ring-[#6B001F] focus:border-[#6B001F] placeholder-gray-400 text-sm"
+                    placeholder="Password"
+                  />
+                </div>
+              </div>
+
+              <!-- Confirm Password -->
+              <div>
+                <div class="relative flex items-center">
+                  <span class="icon-container absolute">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-[18px] w-[18px] text-gray-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    type="password"
+                    class="input-with-icon w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-1 focus:ring-[#6B001F] focus:border-[#6B001F] placeholder-gray-400 text-sm"
+                    placeholder="Confirm Password"
+                  />
+                </div>
+              </div>
+
+              <!-- Terms and Conditions -->
+              <div class="flex items-center">
+                <input
+                  type="checkbox"
+                  class="w-4 h-4 border-gray-300 rounded text-[#6B001F] focus:ring-[#6B001F]"
+                  id="terms"
+                />
+                <label
+                  for="terms"
+                  class="ml-2 text-xs sm:text-sm text-gray-500"
+                >
+                  I agree to the
+                  <a href="#" class="text-[#6B001F] hover:text-[#590019]"
+                    >Terms and Conditions</a
+                  >
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                class="w-full bg-[#6B001F] text-white py-3 sm:py-4 rounded-xl hover:bg-[#590019] transition duration-200 mt-4 text-sm sm:text-base"
+              >
+                Sign Up
+              </button>
+
+              <div class="text-center mt-4 sm:mt-6">
+                <p class="text-xs sm:text-sm text-gray-500">
+                  Already have an account?
+                  <a
+                    href="index.html"
+                    class="text-[#6B001F] hover:text-[#590019] font-medium ml-1"
+                    >LOGIN</a
+                  >
+                </p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
