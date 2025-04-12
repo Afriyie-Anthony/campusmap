@@ -4,8 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Campus Map</title>
-    <link rel="stylesheet" href="./src/output.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../output.css" />
     <!-- 
       To use Google Maps, you need to:
       1. Go to https://console.cloud.google.com/
@@ -118,7 +117,7 @@
           <!-- Logo -->
           <div class="flex-shrink-0">
             <img
-              src="./public/icons/logo1.png"
+              src="../../public/icons/logo1.png"
               alt="logo"
               class="h-12 w-auto"
             />
@@ -156,7 +155,7 @@
                 id="notification-btn"
               >
                 <img
-                  src="./public/images/notificatiuon.png"
+                  src="../../public/images/notificatiuon.png"
                   alt="notification"
                   class="w-6 h-6 sm:w-7 sm:h-7"
                 />
@@ -171,9 +170,9 @@
                 id="profile-btn"
               >
                 <img
-                  src="./public/images/profile.png"
+                  src="../../public/images/profile.png"
                   alt="profile"
-                  class="w-8 h-8 sm:w-9 sm:h-9 rounded-full"
+                  class="w-12 h-8 sm:w-9 sm:h-9 rounded-full"
                 />
               </button>
 
@@ -185,20 +184,20 @@
                 <!-- Profile Menu Items -->
                 <div class="p-2">
                   <a
-                    href="./profile.html"
+                    href="../html/profile.html"
                     class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     View Profile
                   </a>
                   <a
-                    href="./profile.html"
+                    href="../html/email-settings.html"
                     class="block px-4 py-3 text-base text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     Email Settings
                   </a>
                   <div class="h-[1px] bg-gray-200 my-2"></div>
                   <a
-                    href="#"
+                    href="../../index.html"
                     class="block px-4 py-3 text-red-600 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     Logout
@@ -390,7 +389,7 @@
             class="bg-white rounded-full shadow-xl flex items-center px-4 h-12 sm:h-[50px]"
           >
             <img
-              src="./public/icons/search.png"
+              src="../../public/icons/search.png"
               alt="search"
               class="w-5 h-5 sm:w-6 sm:h-6"
             />
@@ -400,7 +399,7 @@
               class="w-full px-4 focus:outline-none text-sm sm:text-base"
             />
             <img
-              src="./public/icons/forward.png"
+              src="../../public/icons/forward.png"
               alt="filter"
               class="w-5 h-5 sm:w-6 sm:h-6"
             />
@@ -416,7 +415,7 @@
             data-filter="hostels"
           >
             <img
-              src="./public/icons/hostels.png"
+              src="../../public/icons/hostels.png"
               alt="hostel"
               class="w-4 h-4 sm:w-5 sm:h-5"
             />
@@ -427,7 +426,7 @@
             data-filter="faculties"
           >
             <img
-              src="./public/icons/faculties.png"
+              src="../../public/icons/faculties.png"
               alt="faculty"
               class="w-4 h-4 sm:w-5 sm:h-5"
             />
@@ -438,7 +437,7 @@
             data-filter="eateries"
           >
             <img
-              src="./public/icons/eatries.png"
+              src="../../public/icons/eatries.png"
               alt="food"
               class="w-4 h-4 sm:w-5 sm:h-5"
             />
@@ -449,7 +448,7 @@
             data-filter="atm"
           >
             <img
-              src="./public/icons/atm.png"
+              src="../../public/icons/atm.png"
               alt="atm"
               class="w-4 h-4 sm:w-5 sm:h-5"
             />
@@ -1123,18 +1122,7 @@
 
       navLinks.forEach((link) => {
         link.addEventListener("click", (e) => {
-          if (link.textContent.includes("View Profile")) {
-            // Allow the default action
-            return; // Do not prevent default
-          }
-          // Other logic for different links
-          e.preventDefault(); // Only prevent default for other links
-
-          // Remove active state from all links
-          navLinks.forEach((l) => {
-            l.classList.remove("text-[#6B001F]");
-            l.classList.add("text-gray-600");
-          });
+         
 
           // Add active state to clicked link
           link.classList.remove("text-gray-600");
@@ -1347,15 +1335,6 @@
           profileDropdown.classList.add("hidden");
         });
 
-        // Handle logout click
-        const logoutBtn = profileDropdown.querySelector(
-          'a[class*="text-red-600"]'
-        );
-        logoutBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          // Add your logout logic here
-          console.log("Logging out...");
-        });
       });
 
       // View Profile Page Functionality
@@ -1365,15 +1344,7 @@
         const closeProfileBtn = document.getElementById("close-profile-page");
 
         // Show profile page when clicking "View Profile"
-        viewProfileLinks.forEach((link) => {
-          if (link.textContent.trim() === "View Profile") {
-            link.addEventListener("click", (e) => {
-              e.preventDefault();
-              viewProfilePage.classList.remove("hidden");
-              document.body.classList.add("overflow-hidden");
-            });
-          }
-        });
+     
 
         // Close profile page
         closeProfileBtn.addEventListener("click", () => {
